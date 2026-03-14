@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "weixin-reader": {
+      "command": "python",
+      "args": ["C:\\Users\\18476\\.claude\\mcp-servers\\wexin-read-mcp\\src\\server.py"],
+      "env": {
+        "PYTHONUNBUFFERED": "1"
+      }
+    }
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx skills:*)",
+      "Bash(test:*)",
+      "WebSearch",
+      "Bash(ls:*)",
+      "WebFetch(domain:docs.openclaw.ai)",
+      "WebFetch(domain:news.ycombinator.com)",
+      "WebFetch(domain:36kr.com)",
+      "WebFetch(domain:www.qbitai.com)",
+      "Bash(npx:*)",
+      "Bash(source:*)",
+      "Bash(curl:*)",
+      "Bash(taskkill:*)",
+      "Bash(xxd:*)",
+      "Bash(which gh 2>&1 || where gh 2>&1 || echo \"gh not found in PATH\")",
+      "Read(//c/AllProject/skills_project/baoyu-skills-main/$HOME/.claude/**)",
+      "Read(//c/AllProject/skills_project/baoyu-skills-main/$HOME/.claude/mcp-servers/**)",
+      "Bash(pip install -r requirements.txt)",
+      "Bash(playwright install chromium 2>&1 | tail -5)",
+      "Bash(playwright install --dry-run chromium 2>&1 || echo \"checking...\" && python -c \"from playwright.sync_api import sync_playwright; print\\('playwright OK'\\)\" 2>&1)",
+      "Bash(cygpath -w \"$HOME/.claude/mcp-servers/wexin-read-mcp/src/server.py\")",
+      "WebFetch(domain:scottspence.com)",
+      "WebFetch(domain:linuxbeast.com)",
+      "WebFetch(domain:gofastmcp.com)",
+      "Bash(timeout 5 python src/server.py)",
+      "Bash(python -c \"import fastmcp; print\\('fastmcp', fastmcp.__version__\\)\" 2>&1 && python -c \"from playwright.async_api import async_playwright; print\\('playwright OK'\\)\" 2>&1 && python -c \"from bs4 import BeautifulSoup; print\\('bs4 OK'\\)\" 2>&1 && python -c \"import lxml; print\\('lxml OK'\\)\" 2>&1)",
+      "Bash(claude mcp:*)",
+      "mcp__weixin-reader__read_weixin_article"
+    ]
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "weixin-reader"
+  ]
+}

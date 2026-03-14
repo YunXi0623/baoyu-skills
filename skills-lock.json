@@ -1,0 +1,90 @@
+{
+  "version": 1,
+  "skills": {
+    "baoyu-article-illustrator": {
+      "source": "C:\\AllProject\\skills_project\\baoyu-skills-main",
+      "sourceType": "local",
+      "computedHash": "cc117029c0642888c998cad2c6c52093aaed86a0376529143e7b33e5d201c776"
+    },
+    "baoyu-comic": {
+      "source": "C:\\AllProject\\skills_project\\baoyu-skills-main",
+      "sourceType": "local",
+      "computedHash": "085f2328cd1ddf2f22ad8a674d8e6360022af7db7b13471de756e29a46a45f7f"
+    },
+    "baoyu-compress-image": {
+      "source": "C:\\AllProject\\skills_project\\baoyu-skills-main",
+      "sourceType": "local",
+      "computedHash": "b2fdbd6bd231751def48907924bbb863a92f4c403009db12f502673fa6569e1d"
+    },
+    "baoyu-cover-image": {
+      "source": "C:\\AllProject\\skills_project\\baoyu-skills-main",
+      "sourceType": "local",
+      "computedHash": "820dd116c224efdcc24a5d5bb1ef747a2a350fa7f699120e37ec16a65d7ed60f"
+    },
+    "baoyu-danger-gemini-web": {
+      "source": "C:\\AllProject\\skills_project\\baoyu-skills-main",
+      "sourceType": "local",
+      "computedHash": "4c80726a4e7109c603706072f25525e627c0e34e2fbe1582a0116496ec4f5dfb"
+    },
+    "baoyu-danger-x-to-markdown": {
+      "source": "C:\\AllProject\\skills_project\\baoyu-skills-main",
+      "sourceType": "local",
+      "computedHash": "9a2742bd283010145da17ddb3e7d95020ddb2b96d72dffd6cdb2de565030cb5e"
+    },
+    "baoyu-format-markdown": {
+      "source": "C:\\AllProject\\skills_project\\baoyu-skills-main",
+      "sourceType": "local",
+      "computedHash": "78236cc0ff80ad4836d9de21e6a424f53a13c324e31a347a64fedfdab3a9fe4e"
+    },
+    "baoyu-image-gen": {
+      "source": "C:\\AllProject\\skills_project\\baoyu-skills-main",
+      "sourceType": "local",
+      "computedHash": "a5ea064f1735beeeaaa21b0d149210f655538cee1029d40d7dbd0a2064cb3097"
+    },
+    "baoyu-infographic": {
+      "source": "C:\\AllProject\\skills_project\\baoyu-skills-main",
+      "sourceType": "local",
+      "computedHash": "9726e9339f53a99861c9ff024b9b8c87afa1dafcd2554b4a536a0c79ed4c8bba"
+    },
+    "baoyu-markdown-to-html": {
+      "source": "C:\\AllProject\\skills_project\\baoyu-skills-main",
+      "sourceType": "local",
+      "computedHash": "6f8772edf9a5c637aed4ff2d0647c037e32b1fe4317ad614cebaf5e9aec50dc5"
+    },
+    "baoyu-post-to-wechat": {
+      "source": "C:\\AllProject\\skills_project\\baoyu-skills-main",
+      "sourceType": "local",
+      "computedHash": "c96334cfd32216b5ecaaedecbae4343a61bd0b949584f9237d9c496b92a14a94"
+    },
+    "baoyu-post-to-x": {
+      "source": "C:\\AllProject\\skills_project\\baoyu-skills-main",
+      "sourceType": "local",
+      "computedHash": "b9a20870a4b16fdef738fa92e6774541eaeced1c29b3e1be9b6b08365b8a3a16"
+    },
+    "baoyu-slide-deck": {
+      "source": "C:\\AllProject\\skills_project\\baoyu-skills-main",
+      "sourceType": "local",
+      "computedHash": "4f765b62e438682d6b5ce83246877713adc182c019a5dc14863be7a25c943559"
+    },
+    "baoyu-url-to-markdown": {
+      "source": "C:\\AllProject\\skills_project\\baoyu-skills-main",
+      "sourceType": "local",
+      "computedHash": "d83781ebc6474783cbf5c8200b8158125d46742adc67bf82f575997d36651ac4"
+    },
+    "baoyu-xhs-images": {
+      "source": "C:\\AllProject\\skills_project\\baoyu-skills-main",
+      "sourceType": "local",
+      "computedHash": "a4e17549670ab5134ecff4cc0d34b3123e22014e7ec4e8086485111627078219"
+    },
+    "release-skills": {
+      "source": "C:\\AllProject\\skills_project\\baoyu-skills-main",
+      "sourceType": "local",
+      "computedHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "yunxi-x-copywriter": {
+      "source": "C:\\AllProject\\skills_project\\baoyu-skills-main",
+      "sourceType": "local",
+      "computedHash": "ed0fb2094c449ecbee36952c515c5efd3baa19b4c568d633cd9f85dcd51ab829"
+    }
+  }
+}
