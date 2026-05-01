@@ -38,7 +38,7 @@ const EXTERNAL_THEME_CONFIG_PATH =
 const EXTERNAL_THEME_DIR =
   process.env.MD_THEME_DIR
   || path.resolve(path.dirname(EXTERNAL_THEME_CONFIG_PATH), "theme-css");
-const FALLBACK_THEMES: ThemeName[] = ["default", "grace", "simple"];
+const FALLBACK_THEMES: ThemeName[] = ["default", "grace", "simple", "modern-blue", "modern-warm"];
 
 const DEFAULT_STYLE = {
   primaryColor: "#0F4C81",

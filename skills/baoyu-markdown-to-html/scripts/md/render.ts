@@ -38,16 +38,99 @@ const EXTERNAL_THEME_CONFIG_PATH =
 const EXTERNAL_THEME_DIR =
   process.env.MD_THEME_DIR
   || path.resolve(path.dirname(EXTERNAL_THEME_CONFIG_PATH), "theme-css");
-const FALLBACK_THEMES: ThemeName[] = ["default", "grace", "simple"];
+const FALLBACK_THEMES: ThemeName[] = ["default", "grace", "simple", "modern-blue", "modern-warm"];
 
 const DEFAULT_STYLE = {
   primaryColor: "#0F4C81",
   fontFamily:
     "-apple-system-font,BlinkMacSystemFont, Helvetica Neue, PingFang SC, Hiragino Sans GB , Microsoft YaHei UI , Microsoft YaHei ,Arial,sans-serif",
   fontSize: "16px",
+  lineHeight: "1.75",
+  letterSpacing: "0",
   foreground: "0 0% 3.9%",
   blockquoteBackground: "#f7f7f7",
 };
+
+function normalizeCssLength(raw: string, defaultUnit: "px" | "em" = "px"): string {
+  const trimmed = raw.trim();
+  if (!trimmed) return trimmed;
+  if (/^[0-9]*\.?[0-9]+$/.test(trimmed)) {
+    if (defaultUnit === "em" && parseFloat(trimmed) <= 5) {
+      return trimmed;
+    }
+    return `${trimmed}${defaultUnit}`;
+  }
+  return trimmed;
+}
+
+function findExtendFileUpward(startDir: string, skillName: string): string | null {
+  const target = path.join(".baoyu-skills", skillName, "EXTEND.md");
+  let dir = path.resolve(startDir);
+  while (true) {
+    const candidate = path.join(dir, target);
+    if (fs.existsSync(candidate)) return candidate;
+    const parent = path.dirname(dir);
+    if (parent === dir) return null;
+    dir = parent;
+  }
+}
+
+function loadExtendPreferences(): void {
+  const SKILL_NAME = "baoyu-markdown-to-html";
+  const home = process.env.HOME || process.env.USERPROFILE || "";
+  const projectExtend =
+    findExtendFileUpward(process.env.BAOYU_PROJECT_CWD || process.cwd(), SKILL_NAME)
+    || findExtendFileUpward(process.cwd(), SKILL_NAME);
+  const userExtend =
+    home && fs.existsSync(path.join(home, ".baoyu-skills", SKILL_NAME, "EXTEND.md"))
+      ? path.join(home, ".baoyu-skills", SKILL_NAME, "EXTEND.md")
+      : null;
+  const candidates = [projectExtend, userExtend].filter(Boolean) as string[];
+
+  for (const file of candidates) {
+    let content: string;
+    try {
+      content = fs.readFileSync(file, "utf-8");
+    } catch {
+      continue;
+    }
+    const lines = content.split(/\r?\n/);
+    for (const rawLine of lines) {
+      const line = rawLine.trim();
+      if (!line || line.startsWith("#") || line.startsWith("//")) continue;
+      const match = line.match(/^([a-zA-Z_][a-zA-Z0-9_]*)\s*[:=]\s*(.+?)\s*$/);
+      if (!match) continue;
+      const key = match[1].toLowerCase();
+      const value = match[2].replace(/^["']|["']$/g, "").trim();
+      if (!value) continue;
+      switch (key) {
+        case "font_size":
+        case "fontsize":
+          DEFAULT_STYLE.fontSize = normalizeCssLength(value, "px");
+          break;
+        case "line_height":
+        case "lineheight":
+          DEFAULT_STYLE.lineHeight = normalizeCssLength(value, "em");
+          break;
+        case "letter_spacing":
+        case "letterspacing":
+          DEFAULT_STYLE.letterSpacing = normalizeCssLength(value, "px");
+          break;
+        case "font_family":
+        case "fontfamily":
+          DEFAULT_STYLE.fontFamily = value;
+          break;
+        case "primary_color":
+        case "primarycolor":
+          DEFAULT_STYLE.primaryColor = value;
+          break;
+      }
+    }
+    break;
+  }
+}
+
+loadExtendPreferences();
 
 Object.entries(COMMON_LANGUAGES).forEach(([name, lang]) => {
   hljs.registerLanguage(name, lang);
@@ -685,6 +768,8 @@ function buildCss(baseCss: string, themeCss: string): string {
   --md-primary-color: ${DEFAULT_STYLE.primaryColor};
   --md-font-family: ${DEFAULT_STYLE.fontFamily};
   --md-font-size: ${DEFAULT_STYLE.fontSize};
+  --md-line-height: ${DEFAULT_STYLE.lineHeight};
+  --md-letter-spacing: ${DEFAULT_STYLE.letterSpacing};
   --foreground: ${DEFAULT_STYLE.foreground};
   --blockquote-background: ${DEFAULT_STYLE.blockquoteBackground};
 }
@@ -701,7 +786,20 @@ body {
 }
 `.trim();
 
-  return [variables, baseCss, themeCss].join("\n\n");
+  const overrides = `
+#output,
+#output p,
+#output li,
+#output blockquote,
+#output blockquote p,
+#output ul,
+#output ol {
+  line-height: ${DEFAULT_STYLE.lineHeight};
+  letter-spacing: ${DEFAULT_STYLE.letterSpacing};
+}
+`.trim();
+
+  return [variables, baseCss, themeCss, overrides].join("\n\n");
 }
 
 function normalizeThemeCss(css: string): string {
@@ -763,11 +861,15 @@ function normalizeCssText(cssText: string): string {
     .replace(/var\(--md-primary-color\)/g, DEFAULT_STYLE.primaryColor)
     .replace(/var\(--md-font-family\)/g, DEFAULT_STYLE.fontFamily)
     .replace(/var\(--md-font-size\)/g, DEFAULT_STYLE.fontSize)
+    .replace(/var\(--md-line-height\)/g, DEFAULT_STYLE.lineHeight)
+    .replace(/var\(--md-letter-spacing\)/g, DEFAULT_STYLE.letterSpacing)
     .replace(/var\(--blockquote-background\)/g, DEFAULT_STYLE.blockquoteBackground)
     .replace(/hsl\(var\(--foreground\)\)/g, "#3f3f3f")
     .replace(/--md-primary-color:\s*[^;"']+;?/g, "")
     .replace(/--md-font-family:\s*[^;"']+;?/g, "")
     .replace(/--md-font-size:\s*[^;"']+;?/g, "")
+    .replace(/--md-line-height:\s*[^;"']+;?/g, "")
+    .replace(/--md-letter-spacing:\s*[^;"']+;?/g, "")
     .replace(/--blockquote-background:\s*[^;"']+;?/g, "")
     .replace(/--foreground:\s*[^;"']+;?/g, "");
 }

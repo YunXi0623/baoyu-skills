@@ -10,7 +10,14 @@ import { read_cookie_file, write_cookie_file } from './cookie-file.js';
 import { resolveGeminiWebDataDir, resolveGeminiWebCookiePath } from './paths.js';
 import { load_browser_cookies } from './load-browser-cookies.js';
 
-async function send_request(cookies: Record<string, string>, verbose: boolean): Promise<[string, Record<string, string>]> {
+export type InitTokens = {
+  access_token: string | null;
+  build_label: string | null;
+  session_id: string | null;
+  language: string | null;
+};
+
+async function send_request(cookies: Record<string, string>, verbose: boolean): Promise<[InitTokens, Record<string, string>]> {
   const res = await fetch_with_timeout(Endpoint.INIT, {
     method: 'GET',
     headers: { ...Headers.GEMINI, Cookie: cookie_header(cookies) },
@@ -20,10 +27,22 @@ async function send_request(cookies: Record<string, string>, verbose: boolean): 
 
   if (!res.ok) throw new Error(`Init failed: ${res.status} ${res.statusText}`);
   const text = await res.text();
-  const m = text.match(/\"SNlM0e\":\"(.*?)\"/);
-  if (!m) throw new Error('Missing SNlM0e in response');
-  if (verbose) logger.debug('Init succeeded. Initializing client...');
-  return [m[1]!, cookies];
+
+  const at = text.match(/\"SNlM0e\":\"(.*?)\"/);
+  const bl = text.match(/\"cfb2h\":\"(.*?)\"/);
+  const sid = text.match(/\"FdrFJe\":\"(.*?)\"/);
+  const lang = text.match(/\"TuX5cc\":\"(.*?)\"/);
+
+  if (!at && !bl && !sid) throw new Error('No init tokens found in response');
+
+  if (verbose) logger.debug(`Init succeeded. Tokens: SNlM0e=${!!at}, cfb2h=${!!bl}, FdrFJe=${!!sid}, TuX5cc=${!!lang}`);
+
+  return [{
+    access_token: at?.[1] ?? null,
+    build_label: bl?.[1] ?? null,
+    session_id: sid?.[1] ?? null,
+    language: lang?.[1] ?? null,
+  }, cookies];
 }
 
 function merge_cookie_maps(...maps: Array<Record<string, string> | null | undefined>): Record<string, string> {
@@ -80,7 +99,7 @@ export async function get_access_token(
   base_cookies: Record<string, string>,
   proxy: string | null = null,
   verbose: boolean = false,
-): Promise<[string, Record<string, string>]> {
+): Promise<[InitTokens, Record<string, string>]> {
   const extra = await fetch_google_extra_cookies(proxy, verbose);
 
   const cacheDir = resolveGeminiWebDataDir();
@@ -139,7 +158,7 @@ export async function get_access_token(
     unique.push(c);
   }
 
-  const try_candidates = async (): Promise<[string, Record<string, string>]> => {
+  const try_candidates = async (): Promise<[InitTokens, Record<string, string>]> => {
     if (unique.length === 0) throw new Error('no candidates');
     const attempts = unique.map(async (c, i) => {
       try {
@@ -150,7 +169,7 @@ export async function get_access_token(
         throw e;
       }
     });
-    return (await Promise.any(attempts)) as [string, Record<string, string>];
+    return (await Promise.any(attempts)) as [InitTokens, Record<string, string>];
   };
 
   try {

@@ -244,7 +244,11 @@ async function fetch_google_cookies_via_cdp(
       }
 
       last = m;
-      if (await is_gemini_session_ready(m, verbose)) {
+      if (m['__Secure-1PSID'] && m['__Secure-1PSIDTS']) {
+        if (await is_gemini_session_ready(m, verbose)) {
+          return m;
+        }
+        if (verbose) logger.debug('Session validation via network failed, but key cookies found.');
         return m;
       }
 

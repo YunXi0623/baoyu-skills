@@ -85,7 +85,7 @@ npx -y bun skills/baoyu-danger-gemini-web/scripts/main.ts --promptfiles system.m
 | Rule | Description |
 |------|-------------|
 | **Load project skills first** | MUST load all skills from `skills/` directory in current project. Project skills take priority over system/user-level skills with same name. |
-| **Default image generation** | When image generation is needed, use `skills/baoyu-image-gen/SKILL.md` by default (unless user specifies otherwise). |
+| **Default image generation** | When the current Agent/host can generate images directly, use direct image output first. Use `skills/baoyu-image-gen/SKILL.md` only when direct output is unavailable or the user explicitly needs an API/provider workflow. Never use `baoyu-danger-gemini-web` for images unless the user explicitly requests Gemini Web. |
 
 **Loading Priority** (highest → lowest):
 1. Current project `skills/` directory
@@ -216,15 +216,16 @@ In SKILL.md, link to reference files (one level deep only):
 
 ## Image Generation Guidelines
 
-Skills that require image generation MUST delegate to available image generation skills rather than implementing their own.
+Skills that require image generation MUST use the current Agent/host's direct image output first when available. Do not route image generation through CLI/API skills merely because a workflow wants an output file.
 
 ### Image Generation Skill Selection
 
-**Default**: Use `skills/baoyu-image-gen/SKILL.md` (unless user specifies otherwise).
+**Default**: Use direct image output from the current Agent/host when available.
 
-1. Read `skills/baoyu-image-gen/SKILL.md` for parameters and capabilities
-2. If user explicitly requests a different skill, check `skills/` directory for alternatives
-3. Only ask user to choose when they haven't specified and multiple viable options exist
+1. Generate the requested cover/illustration images directly from the saved prompt or visual brief.
+2. If the user explicitly requires a local API/provider workflow, or direct output is unavailable, use `skills/baoyu-image-gen/SKILL.md`.
+3. Do not use `skills/baoyu-danger-gemini-web/SKILL.md` for images unless the user explicitly says to use Gemini Web.
+4. If a local file is required but direct image output does not provide a path, report that direct generation produced the asset and ask before falling back to CLI/API generation.
 
 ### Generation Flow Template
 
@@ -234,49 +235,68 @@ Use this template when implementing image generation in skills:
 ### Step N: Generate Images
 
 **Skill Selection**:
-1. Check available image generation skills (e.g., `baoyu-danger-gemini-web`)
-2. Read selected skill's SKILL.md for parameter reference
-3. If multiple skills available, ask user to choose
+1. Prefer current Agent/host direct image output.
+2. Use `baoyu-image-gen` only if direct output is unavailable or an explicit API/provider workflow is needed.
+3. Never default to `baoyu-danger-gemini-web` for image generation.
 
 **Generation Flow**:
-1. Call selected image generation skill with:
-   - Prompt file path (or inline prompt)
-   - Output image path
-   - Any skill-specific parameters (refer to skill's SKILL.md)
-2. Generate images sequentially (one at a time)
-3. After each image, output progress: "Generated X/N"
-4. On failure, auto-retry once before reporting error
+1. Generate images directly from the saved prompt file or visual brief.
+2. Generate images sequentially (one at a time), unless the user explicitly requests parallel generation.
+3. If direct generation fails or is unavailable, ask before falling back to `baoyu-image-gen`.
+4. On failure, auto-retry once before reporting error.
 ```
 
-### Output Path Convention
+### Output Path Convention — Platform Content Directories
 
-Each session creates an independent directory. Even the same source file generates a new directory per session.
+Content for three target platforms is stored in dedicated root-level directories, organized by date and sequence number:
 
-**Output Directory**:
+| Platform | Root Directory | Description |
+|----------|---------------|-------------|
+| WeChat (微信公众号) | `wechat-content/` | Long-form articles, HTML, cover images |
+| Xiaohongshu (小红书) | `xhs-content/` | Infographic series, short copy |
+| X (Twitter) | `x-content/` | Short posts, threads, images |
+
+**Directory Structure**:
 ```
-<skill-suffix>/<topic-slug>/
+<platform-dir>/YYYY-MM-DD/NN-<topic-slug>/
 ```
-- `<skill-suffix>`: Skill name suffix (e.g., `xhs-images`, `cover-image`, `slide-deck`, `comic`)
-- `<topic-slug>`: Generated from content topic (2-4 words, kebab-case)
-- Example: `xhs-images/ai-future-trends/`
+- `YYYY-MM-DD`: Creation date
+- `NN`: Two-digit sequence number per day (01, 02, 03...), supports multiple posts per day
+- `<topic-slug>`: 2-4 words, kebab-case, derived from content topic
 
-**Slug Generation**:
-1. Extract main topic from content (2-4 words, kebab-case)
-2. Example: "Introduction to Machine Learning" → `intro-machine-learning`
+**Example**:
+```
+wechat-content/
+  2026-04-11/
+    01-claude-写测试用例/
+    02-gpt4o-免费开放/
 
-**Conflict Resolution**:
-If `<skill-suffix>/<topic-slug>/` already exists:
-- Append timestamp: `<topic-slug>-YYYYMMDD-HHMMSS`
-- Example: `ai-future` exists → `ai-future-20260118-143052`
+xhs-content/
+  2026-04-11/
+    01-ai-测试效率/
+    02-claude-vs-chatgpt/
+
+x-content/
+  2026-04-11/
+    01-claude-update/
+    02-ai-coding-tip/
+```
+
+**Sequence Number Rules**:
+- Check existing subdirectories under `YYYY-MM-DD/` to determine next available number
+- Always zero-padded two digits (01-99)
+- Numbers are per-platform, per-day independent
 
 **Source Files**:
-- Copy all sources to `<skill-suffix>/<topic-slug>/` with naming: `source-{slug}.{ext}`
+- Copy all sources into the content directory with naming: `source-{slug}.{ext}`
 - Multiple sources supported: text, images, files from conversation
 - Examples:
   - `source-article.md` (main text content)
   - `source-reference.png` (image from conversation)
   - `source-data.csv` (additional file)
 - Original source files remain unchanged
+
+**Legacy Output Directories**: `xhs-images/`, `comic/`, `infographic/`, `illustrations/`, `articles/` etc. are legacy output paths. New content creation MUST use the platform directories above.
 
 ### Image Naming Convention
 
@@ -320,9 +340,11 @@ When adding, updating, or deleting styles for `baoyu-comic`, follow this workflo
    - Add auto-selection entry if applicable
 3. **Generate showcase image**:
    ```bash
-   npx -y bun skills/baoyu-danger-gemini-web/scripts/main.ts \
+   # Prefer direct image output from the current Agent/host.
+   # If direct output is unavailable or an API/provider workflow is required:
+   npx -y bun skills/baoyu-image-gen/scripts/main.ts \
      --prompt "A single comic book page in <style-name> style showing [appropriate scene]. Features: [style characteristics from style definition]. 3:4 portrait aspect ratio comic page." \
-     --image screenshots/comic-styles/<style-name>.png
+     --image screenshots/comic-styles/<style-name>.png --ar 3:4
    ```
 4. **Compress to WebP**:
    ```bash
@@ -428,3 +450,22 @@ Custom configurations via EXTEND.md. See **Preferences** section for paths and s
 - Use `$HOME` instead of `~` for cross-platform compatibility (macOS/Linux/WSL)
 - Use `test -f` Bash command for explicit file existence check
 - ASCII tables for clear visual formatting
+
+## WeChat Content Creation (微信公众号写作)
+
+When user asks to write articles, create content, or publish to WeChat (keywords: 写文章、公众号、发布、写作、草稿箱), follow this workflow:
+
+1. **Read memory file first**: Load `memory/project_wechat_workflow.md` for full workflow details
+2. **Create daily directory**: `wechat-content/微信公众号-YYYY-MM-DD/`
+3. **Execute orchestration skill**: `baoyu-wechat-mp-writer` (internally calls `baoyu-humanize` → `baoyu-content-review` → `baoyu-article-illustrator` → `baoyu-cover-image` → `baoyu-markdown-to-html` → `baoyu-post-to-wechat`)
+4. **Image generation rule**: In illustration/cover steps, direct Agent/host image output comes before any CLI/API backend. Do not run `baoyu-image-gen` just because an output path exists, and never use `baoyu-danger-gemini-web` unless explicitly requested.
+5. **All outputs** go into the daily directory
+
+## Content Post-Processing Rule (内容后处理规则)
+
+**IMPORTANT**: After ANY content generation skill produces text content, ALWAYS run these two steps before publishing or showing final output:
+
+1. **baoyu-humanize**: Remove AI-generated patterns and polish for natural tone (load rules from skill's references/)
+2. **baoyu-content-review**: Scan the final wording for prohibited words and compliance risks (load rules from skill's references/)
+
+This applies to: `baoyu-article-writer`, `baoyu-x-copywriter`, `baoyu-xhs-images`, and any future writing skills. `baoyu-wechat-mp-writer` already orchestrates these steps internally.

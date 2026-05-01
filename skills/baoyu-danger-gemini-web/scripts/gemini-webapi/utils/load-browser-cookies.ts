@@ -124,10 +124,10 @@ function find_chrome_executable(): string | null {
       break;
     case 'win32':
       candidates.push(
-        'C:\\\\Program Files\\\\Google\\\\Chrome\\\\Application\\\\chrome.exe',
-        'C:\\\\Program Files (x86)\\\\Google\\\\Chrome\\\\Application\\\\chrome.exe',
-        'C:\\\\Program Files\\\\Microsoft\\\\Edge\\\\Application\\\\msedge.exe',
-        'C:\\\\Program Files (x86)\\\\Microsoft\\\\Edge\\\\Application\\\\msedge.exe',
+        'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+        'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
+        'C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe',
+        'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
       );
       break;
     default:
@@ -172,8 +172,14 @@ async function launch_chrome(profileDir: string, port: number): Promise<ChildPro
     '--no-first-run',
     '--no-default-browser-check',
     '--disable-popup-blocking',
-    'https://gemini.google.com/app',
   ];
+
+  const proxy = process.env.HTTPS_PROXY || process.env.HTTP_PROXY || process.env.https_proxy || process.env.http_proxy;
+  if (proxy) {
+    args.push(`--proxy-server=${proxy}`);
+  }
+
+  args.push('https://gemini.google.com/app');
 
   return spawn(chrome, args, { stdio: 'ignore' });
 }
@@ -195,7 +201,7 @@ async function is_gemini_session_ready(cookies: CookieMap, verbose: boolean): Pr
     }
 
     const text = await res.text();
-    return /\"SNlM0e\":\"(.*?)\"/.test(text);
+    return /\"SNlM0e\":\"(.*?)\"/.test(text) || /\"cfb2h\":\"(.*?)\"/.test(text) || /\"FdrFJe\":\"(.*?)\"/.test(text);
   } catch (e) {
     if (verbose) logger.debug(`Gemini init check error: ${e instanceof Error ? e.message : String(e)}`);
     return false;
@@ -244,11 +250,20 @@ async function fetch_google_cookies_via_cdp(
       }
 
       last = m;
-      if (await is_gemini_session_ready(m, verbose)) {
+      if (m['__Secure-1PSID'] && m['__Secure-1PSIDTS']) {
+        if (await is_gemini_session_ready(m, verbose)) {
+          return m;
+        }
+        if (verbose) logger.debug('Session validation via network failed, but key cookies found. Accepting CDP cookies.');
         return m;
       }
 
       await sleep(1000);
+    }
+
+    if (last['__Secure-1PSID'] && last['__Secure-1PSIDTS']) {
+      if (verbose) logger.warning('Timed out on session validation, but key cookies were captured. Using them anyway.');
+      return last;
     }
 
     throw new Error(`Timed out waiting for a valid Gemini session. Last keys: ${Object.keys(last).join(', ')}`);
@@ -261,12 +276,20 @@ async function fetch_google_cookies_via_cdp(
     }
 
     try {
-      chrome.kill('SIGTERM');
+      if (process.platform === 'win32') {
+        chrome.kill();
+      } else {
+        chrome.kill('SIGTERM');
+      }
     } catch {}
     setTimeout(() => {
       if (!chrome.killed) {
         try {
-          chrome.kill('SIGKILL');
+          if (process.platform === 'win32') {
+            chrome.kill();
+          } else {
+            chrome.kill('SIGKILL');
+          }
         } catch {}
       }
     }, 2_000).unref?.();

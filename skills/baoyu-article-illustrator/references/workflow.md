@@ -302,9 +302,14 @@ Prompt Files:
 - If style/palette was extracted verbally (no file), append info to prompt BODY instead
 - Before writing frontmatter, verify: `test -f references/NN-ref-{slug}.png`
 
-### 5.2 Select Generation Skill
+### 5.2 Select Generation Backend
 
-Check available skills. If multiple, ask user.
+Use this priority:
+
+1. Prefer current Agent/host direct image output whenever it can generate images.
+2. Do not call a CLI/API backend merely because an output file path exists in the workflow.
+3. If direct output is unavailable, or the user explicitly requests a specific API provider / local-file automation workflow, use `baoyu-image-gen`.
+4. Do not call `baoyu-danger-gemini-web` by default. Use it only when the user explicitly asks for Gemini Web reverse-engineered generation.
 
 ### 5.3 Process References ⚠️ REQUIRED if references saved in Step 1.0
 

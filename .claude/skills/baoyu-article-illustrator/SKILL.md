@@ -107,7 +107,12 @@ Full template: [references/workflow.md](references/workflow.md#step-4-generate-o
 3. Prompts **MUST** use type-specific templates with structured sections (ZONES / LABELS / COLORS / STYLE / ASPECT)
 4. LABELS **MUST** include article-specific data: actual numbers, terms, metrics, quotes
 5. **DO NOT** pass ad-hoc inline prompts to `--prompt` without saving prompt files first
-6. Select generation skill, process references (`direct`/`style`/`palette`)
+6. Generate images from saved prompt files:
+   - Prefer current Agent/host direct image output whenever it can generate images
+   - Do not call a CLI/API backend merely because an output path is present
+   - Otherwise call `baoyu-image-gen` only when direct output is unavailable or the user explicitly requests API/provider/local-file automation
+   - Do not call `baoyu-danger-gemini-web` unless user explicitly requests Gemini Web
+   - Process references (`direct`/`style`/`palette`)
 7. Apply watermark if EXTEND.md enabled
 8. Generate from saved prompt files; retry once on failure
 

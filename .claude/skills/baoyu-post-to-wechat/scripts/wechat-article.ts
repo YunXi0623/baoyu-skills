@@ -495,7 +495,7 @@ export async function postArticle(options: ArticleOptions): Promise<void> {
     const initialIds = new Set(targets.targetInfos.map(t => t.targetId));
 
     await clickMenuByText(session, '文章');
-    await sleep(3000);
+    await sleep(5000); // Increased wait time for tab to open
 
     const editorTargetId = await waitForNewTab(cdp, initialIds, 'mp.weixin.qq.com');
     console.log('[wechat] Editor tab opened.');
@@ -644,6 +644,59 @@ export async function postArticle(options: ArticleOptions): Promise<void> {
       }
     }
 
+    // Upload cover image if provided
+    if (options.images && options.images.length > 0) {
+      const coverPath = options.images[0];
+      console.log(`[wechat] Uploading cover image: ${path.basename(coverPath)}`);
+
+      try {
+        // Find cover upload area - try multiple selectors
+        const coverAreaExists = await evaluate<boolean>(session, `
+          !!document.querySelector('.js_cover, .cover-area, [data-type="cover"], .appmsg-cover')
+        `);
+
+        if (coverAreaExists) {
+          // Click to open upload dialog
+          await evaluate(session, `
+            const area = document.querySelector('.js_cover, .cover-area, [data-type="cover"], .appmsg-cover');
+            if (area) area.click();
+          `);
+          await sleep(1000);
+
+          // Look for file input
+          const fileInputExists = await evaluate<boolean>(session, `
+            !!document.querySelector('input[type="file"][accept*="image"]')
+          `);
+
+          if (fileInputExists) {
+            // Get DOM node for file input
+            const doc = await session.cdp.send<{ root: { nodeId: number } }>('DOM.getDocument', {}, { sessionId: session.sessionId });
+            const nodeResult = await session.cdp.send<{ nodeId: number }>('DOM.querySelector', {
+              nodeId: doc.root.nodeId,
+              selector: 'input[type="file"][accept*="image"]'
+            }, { sessionId: session.sessionId });
+
+            if (nodeResult.nodeId) {
+              // Set file to input
+              await session.cdp.send('DOM.setFileInputFiles', {
+                files: [coverPath],
+                nodeId: nodeResult.nodeId
+              }, { sessionId: session.sessionId });
+
+              console.log('[wechat] Cover image uploaded successfully.');
+              await sleep(3000); // Wait for upload to complete
+            }
+          } else {
+            console.warn('[wechat] File input not found for cover upload.');
+          }
+        } else {
+          console.warn('[wechat] Cover upload area not found. You may need to upload manually.');
+        }
+      } catch (err) {
+        console.warn(`[wechat] Cover upload failed: ${err instanceof Error ? err.message : String(err)}`);
+      }
+    }
+
     console.log('[wechat] Saving as draft...');
     await evaluate(session, `document.querySelector('#js_submit button').click()`);
     await sleep(3000);
@@ -677,6 +730,7 @@ Options:
   --author <name>    Author name (default: 宝玉)
   --summary <text>   Article summary
   --image <path>     Content image, can repeat (only with --content)
+  --cover <path>     Cover image for article
   --submit           Save as draft
   --profile <dir>    Chrome profile directory
   --cdp-port <port>  Connect to existing Chrome debug port instead of launching new instance
@@ -707,6 +761,7 @@ async function main(): Promise<void> {
   let theme: string | undefined;
   let author: string | undefined;
   let summary: string | undefined;
+  let coverImage: string | undefined;
   let submit = false;
   let profileDir: string | undefined;
   let cdpPort: number | undefined;
@@ -721,9 +776,15 @@ async function main(): Promise<void> {
     else if (arg === '--author' && args[i + 1]) author = args[++i];
     else if (arg === '--summary' && args[i + 1]) summary = args[++i];
     else if (arg === '--image' && args[i + 1]) images.push(args[++i]!);
+    else if (arg === '--cover' && args[i + 1]) coverImage = args[++i];
     else if (arg === '--submit') submit = true;
     else if (arg === '--profile' && args[i + 1]) profileDir = args[++i];
     else if (arg === '--cdp-port' && args[i + 1]) cdpPort = parseInt(args[++i]!, 10);
+  }
+
+  // If cover image is provided, add it to the beginning of images array
+  if (coverImage) {
+    images.unshift(coverImage);
   }
 
   if (!markdownFile && !htmlFile && !title) { console.error('Error: --title is required (or use --markdown/--html)'); process.exit(1); }

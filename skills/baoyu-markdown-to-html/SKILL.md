@@ -43,7 +43,18 @@ test -f "$HOME/.baoyu-skills/baoyu-markdown-to-html/EXTEND.md" && echo "user"
 │ Not found │ Use defaults                                                              │
 └───────────┴───────────────────────────────────────────────────────────────────────────┘
 
-**EXTEND.md Supports**: Default theme | Custom CSS variables | Code block style
+**EXTEND.md Supports**: Default theme | Font size | Line height | Letter spacing | Font family | Primary color | Code block style
+
+**Recognized keys** (case-insensitive, accept `snake_case` or `lowercase`):
+
+| Key | Default | Notes |
+|-----|---------|-------|
+| `default_theme` | `default` | Resolved theme name |
+| `font_size` | `16px` | Bare numbers default to `px` (e.g. `17` → `17px`) |
+| `line_height` | `1.75` | Unitless number recommended |
+| `letter_spacing` | `0` | Bare numbers default to `px` (e.g. `1` → `1px`) |
+| `font_family` | system stack | Full CSS font-family string |
+| `primary_color` | `#0F4C81` | Hex color for headings/links |
 
 ## Workflow
 
@@ -92,6 +103,8 @@ test -f "$HOME/.baoyu-skills/baoyu-post-to-wechat/EXTEND.md" && grep -o 'default
 | `default` (Recommended) | 经典主题 - 传统排版，标题居中带底边，二级标题白字彩底 |
 | `grace` | 优雅主题 - 文字阴影，圆角卡片，精致引用块 |
 | `simple` | 简洁主题 - 现代极简风，不对称圆角，清爽留白 |
+| `modern-blue` | 现代蓝色 - 蓝色左边框，清爽留白，适合技术文章 |
+| `modern-warm` | 现代暖色 - 橙棕色左边框，温暖色调，适合生活类内容 |
 
 ### Step 2: Convert
 
@@ -169,6 +182,8 @@ npx -y bun ${SKILL_DIR}/scripts/main.ts article.md --title "My Article"
 | `default` | 经典主题 - 传统排版，标题居中带底边，二级标题白字彩底 |
 | `grace` | 优雅主题 - 文字阴影，圆角卡片，精致引用块 (by @brzhang) |
 | `simple` | 简洁主题 - 现代极简风，不对称圆角，清爽留白 (by @okooo5km) |
+| `modern-blue` | 现代蓝色 - 蓝色左边框，清爽留白，适合技术文章 |
+| `modern-warm` | 现代暖色 - 橙棕色左边框，温暖色调，适合生活类内容 |
 
 ## Supported Markdown Features
 

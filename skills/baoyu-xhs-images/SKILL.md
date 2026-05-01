@@ -368,6 +368,31 @@ Display the selected style's default elements from preset, then ask:
 
 With confirmed outline + style + layout:
 
+**Step 4.5: Review & Humanize Text Content（审核+润色文案）**
+
+**Mandatory post-processing** — always run on the confirmed outline before generating images.
+
+**4.5.1 Compliance Check**
+
+Load rules from `baoyu-content-review` skill:
+- [common-rules.md](../baoyu-content-review/references/common-rules.md) — advertising law, exaggeration
+- [xiaohongshu.md](../baoyu-content-review/references/platforms/xiaohongshu.md) — XHS-specific rules (traffic diversion, engagement bait, sensitive categories)
+
+Scan all text in `outline.md`: hooks, titles, messages, visual descriptions containing text. Auto-fix violations in-place. Report briefly: "文案审核完成，修复 N 处" or "文案审核通过 ✓".
+
+**4.5.2 Humanize Text**
+
+Load rules from `baoyu-humanize` skill:
+- [ai-patterns.md](../baoyu-humanize/references/ai-patterns.md) — AI writing patterns
+- [platform-tone.md](../baoyu-humanize/references/platform-tone.md) — Xiaohongshu tone section
+
+Apply **light intensity** (XHS text is short, only fix obvious AI patterns):
+- Remove template phrases and filler words
+- Ensure hook titles sound natural and XHS-native
+- Check tone matches casual, friendly XHS voice
+
+Update `outline.md` with reviewed and humanized text. Proceed to image generation.
+
 **Visual Consistency — Reference Image Chain**:
 To ensure character/style consistency across all images in a series:
 1. **Generate image 1 (cover) FIRST** — without `--ref`

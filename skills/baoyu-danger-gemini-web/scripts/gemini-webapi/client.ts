@@ -83,6 +83,9 @@ export class GeminiClient extends GemMixin {
   public proxy: string | null = null;
   public _running: boolean = false;
   public access_token: string | null = null;
+  public build_label: string | null = null;
+  public session_id: string | null = null;
+  public language: string | null = null;
   public timeout: number = 300;
   public auto_close: boolean = false;
   public close_delay: number = 300;
@@ -130,8 +133,11 @@ export class GeminiClient extends GemMixin {
     const vb = opts.verbose ?? true;
 
     try {
-      const [token, valid] = await get_access_token(this.cookies, this.proxy, vb);
-      this.access_token = token;
+      const [tokens, valid] = await get_access_token(this.cookies, this.proxy, vb);
+      this.access_token = tokens.access_token;
+      this.build_label = tokens.build_label;
+      this.session_id = tokens.session_id;
+      this.language = tokens.language;
       this.cookies = valid;
       this._running = true;
 
@@ -270,7 +276,7 @@ export class GeminiClient extends GemMixin {
 
       if (this.auto_close) await this.reset_close_task();
 
-      if (!this.access_token) throw new APIError('Missing access token.');
+      if (!this.access_token && !this.build_label && !this.session_id) throw new APIError('Missing init tokens.');
 
       const f = files?.length ? files : null;
       const uploaded =
@@ -288,16 +294,23 @@ export class GeminiClient extends GemMixin {
       }
 
       const f_req = JSON.stringify([null, JSON.stringify(inner)]);
-      const body = new URLSearchParams({ at: this.access_token, 'f.req': f_req }).toString();
+      const bodyParams: Record<string, string> = { 'f.req': f_req, 'at': this.access_token || '' };
+      const body = new URLSearchParams(bodyParams).toString();
 
-      const h0 = { ...Headers.GEMINI, ...mdl.model_header, Cookie: Object.entries(this.cookies).map(([k, v]) => `${k}=${v}`).join('; ') };
+      const urlParams = new URLSearchParams();
+      if (this.language) urlParams.set('hl', this.language);
+      if (this.build_label) urlParams.set('bl', this.build_label);
+      if (this.session_id) urlParams.set('f.sid', this.session_id);
+      const generateUrl = urlParams.toString() ? `${Endpoint.GENERATE}?${urlParams}` : Endpoint.GENERATE;
+
+      const h0 = { ...Headers.GEMINI, ...mdl.model_header, 'x-goog-ext-73010989-jspb': '[0]', 'x-goog-ext-73010990-jspb': '[0]', Cookie: Object.entries(this.cookies).map(([k, v]) => `${k}=${v}`).join('; ') };
       const h1 = { ...h0, ...normalize_headers(kwargs.headers) };
 
       let res: Response;
       try {
         const timeout_ms = typeof kwargs.timeout_ms === 'number' ? kwargs.timeout_ms : this.timeout * 1000;
         const { timeout_ms: _t, ...rest } = kwargs;
-        res = await fetch_with_timeout(Endpoint.GENERATE, {
+        res = await fetch_with_timeout(generateUrl, {
           method: 'POST',
           headers: h1,
           body,
@@ -498,15 +511,22 @@ export class GeminiClient extends GemMixin {
   }
 
   protected async _batch_execute(payloads: RPCData[], opts: RequestInit = {}): Promise<Response> {
-    if (!this.access_token) throw new APIError('Missing access token.');
+    if (!this.access_token && !this.build_label && !this.session_id) throw new APIError('Missing init tokens.');
 
     const f_req = JSON.stringify([payloads.map((p) => p.serialize())]);
-    const body = new URLSearchParams({ at: this.access_token, 'f.req': f_req }).toString();
+    const batchBodyParams: Record<string, string> = { 'f.req': f_req, 'at': this.access_token || '' };
+    const body = new URLSearchParams(batchBodyParams).toString();
+
+    const batchUrlParams = new URLSearchParams();
+    if (this.language) batchUrlParams.set('hl', this.language);
+    if (this.build_label) batchUrlParams.set('bl', this.build_label);
+    if (this.session_id) batchUrlParams.set('f.sid', this.session_id);
+    const batchUrl = batchUrlParams.toString() ? `${Endpoint.BATCH_EXEC}?${batchUrlParams}` : Endpoint.BATCH_EXEC;
 
     const h0 = { ...Headers.GEMINI, Cookie: Object.entries(this.cookies).map(([k, v]) => `${k}=${v}`).join('; ') };
     const h1 = { ...h0, ...normalize_headers(opts.headers) };
 
-    const res = await fetch_with_timeout(Endpoint.BATCH_EXEC, {
+    const res = await fetch_with_timeout(batchUrl, {
       method: 'POST',
       headers: h1,
       body,

@@ -203,6 +203,7 @@ export async function convertMarkdown(markdownPath: string, options?: { title?: 
   const result = spawnSync('npx', args, {
     stdio: ['inherit', 'pipe', 'pipe'],
     cwd: baseDir,
+    env: { ...process.env, BAOYU_PROJECT_CWD: process.cwd() },
   });
 
   if (result.status !== 0) {

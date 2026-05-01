@@ -1,0 +1,183 @@
+/**
+ * Modern Warm Theme - 现代暖色风格
+ * 特点：橙棕色左边框、温暖色调、适合微信公众号
+ */
+
+/* ==================== 一级标题 ==================== */
+h1 {
+  padding-left: 16px;
+  border-left: 4px solid #f97316;
+  margin: 2em 0 1em;
+  color: #292524;
+  font-size: calc(var(--md-font-size) * 1.4);
+  font-weight: bold;
+  line-height: 1.4;
+}
+
+/* ==================== 二级标题 ==================== */
+h2 {
+  padding: 12px 16px;
+  border-left: 4px solid #f97316;
+  margin: 2.5em 0 1em;
+  color: #292524;
+  background-color: #fff7ed;
+  font-size: calc(var(--md-font-size) * 1.25);
+  font-weight: bold;
+  line-height: 1.4;
+  border-radius: 4px;
+}
+
+/* ==================== 三级标题 ==================== */
+h3 {
+  padding-left: 12px;
+  border-left: 3px solid #fb923c;
+  margin: 2em 0 0.8em;
+  color: #44403c;
+  font-size: calc(var(--md-font-size) * 1.15);
+  font-weight: bold;
+  line-height: 1.4;
+}
+
+/* ==================== 四级标题 ==================== */
+h4 {
+  margin: 1.5em 0 0.6em;
+  color: #57534e;
+  font-size: calc(var(--md-font-size) * 1.05);
+  font-weight: bold;
+}
+
+/* ==================== 段落 ==================== */
+p {
+  margin: 1.2em 0;
+  color: #44403c;
+  font-size: var(--md-font-size);
+  line-height: 1.8;
+  letter-spacing: 0.02em;
+}
+
+/* ==================== 引用块 ==================== */
+blockquote {
+  padding: 16px 20px;
+  border-left: 4px solid #f97316;
+  margin: 1.5em 0;
+  background-color: #fff7ed;
+  color: #c2410c;
+  font-size: calc(var(--md-font-size) * 0.95);
+  line-height: 1.8;
+}
+
+blockquote p {
+  margin: 0.5em 0;
+  color: #c2410c;
+}
+
+/* ==================== 链接 ==================== */
+a {
+  color: #ea580c;
+  text-decoration: none;
+  border-bottom: 1px solid #fdba74;
+  transition: all 0.2s;
+}
+
+a:hover {
+  color: #c2410c;
+  border-bottom-color: #ea580c;
+}
+
+/* ==================== 列表 ==================== */
+ul, ol {
+  margin: 1em 0;
+  padding-left: 2em;
+  color: #44403c;
+  line-height: 1.8;
+  list-style: none;
+}
+
+li {
+  display: block;
+  margin: 0.5em 0;
+}
+
+/* ==================== 行内代码 ==================== */
+code {
+  padding: 2px 6px;
+  margin: 0 2px;
+  background-color: #fef3c7;
+  color: #b45309;
+  font-family: 'Consolas', 'Monaco', monospace;
+  font-size: calc(var(--md-font-size) * 0.9);
+  border-radius: 3px;
+}
+
+/* ==================== 代码块 ==================== */
+pre {
+  padding: 16px;
+  margin: 1.5em 0;
+  background-color: #292524;
+  border-radius: 6px;
+  overflow-x: auto;
+}
+
+pre code {
+  padding: 0;
+  margin: 0;
+  background-color: transparent;
+  color: #fef3c7;
+  font-size: calc(var(--md-font-size) * 0.85);
+}
+
+/* ==================== 图片 ==================== */
+img {
+  display: block;
+  max-width: 100%;
+  margin: 1.5em auto;
+  border-radius: 4px;
+}
+
+/* ==================== 分隔线 ==================== */
+hr {
+  border: none;
+  border-top: 1px solid #e7e5e4;
+  margin: 2em 0;
+}
+
+/* ==================== 表格 ==================== */
+table {
+  width: 100%;
+  margin: 1.5em 0;
+  border-collapse: collapse;
+  font-size: calc(var(--md-font-size) * 0.9);
+}
+
+th {
+  padding: 10px;
+  background-color: #f97316;
+  color: #fff;
+  font-weight: bold;
+  text-align: left;
+  border: 1px solid #ea580c;
+}
+
+td {
+  padding: 10px;
+  border: 1px solid #e7e5e4;
+  color: #44403c;
+}
+
+tr:nth-child(even) {
+  background-color: #fafaf9;
+}
+
+/* ==================== 强调 ==================== */
+strong {
+  color: #292524;
+  font-weight: bold;
+  padding: 2px 4px;
+  background-color: #fed7aa;
+  border-radius: 2px;
+}
+
+em {
+  color: #57534e;
+  font-style: italic;
+}

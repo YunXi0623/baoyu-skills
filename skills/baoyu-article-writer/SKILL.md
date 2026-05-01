@@ -158,7 +158,59 @@ source_topic: [trend-scout topic name, if applicable]
 ---
 ```
 
-Report saved path to user. Do NOT auto-trigger baoyu-post-to-wechat.
+Report saved path to user. Do NOT auto-trigger baoyu-post-to-wechat. Proceed to Step 5.
+
+### Step 5: Content Review（合规审核）
+
+**Mandatory post-processing** — always run after saving, no user confirmation needed.
+
+1. Read the saved article file from Step 4
+2. Load compliance rules from `baoyu-content-review` skill:
+   - [common-rules.md](../baoyu-content-review/references/common-rules.md) — advertising law, medical/financial claims
+   - [wechat.md](../baoyu-content-review/references/platforms/wechat.md) — WeChat-specific rules
+3. Scan content paragraph by paragraph
+4. If violations found:
+   - Show brief report (count + top 3 issues)
+   - Auto-fix all flagged items in-place (overwrite the saved file)
+   - Report: "合规审核完成，修复 N 处问题"
+5. If clean: "合规审核通过 ✓"
+6. Proceed to Step 6
+
+### Step 6: Humanize（去 AI 味润色）
+
+**Mandatory post-processing** — always run after content review.
+
+1. Read the article file (post-review version)
+2. Load AI pattern rules from `baoyu-humanize` skill:
+   - [ai-patterns.md](../baoyu-humanize/references/ai-patterns.md) — AI writing pattern detection
+   - [platform-tone.md](../baoyu-humanize/references/platform-tone.md) — WeChat tone section
+3. Scan for AI-generated patterns (template openings, filler connectors, flat tone, etc.)
+4. Apply **medium intensity** rewrite by default:
+   - Remove filler connectors and over-politeness
+   - Break list-heavy sections into prose
+   - Add tone variation
+   - Replace assumed consensus with first person
+5. Overwrite the saved file with humanized version
+6. Show brief summary:
+   ```
+   润色完成：修改 N 处 AI 味特征
+   - [top 2-3 changes described in one line each]
+   ```
+
+### Final Output
+
+After all steps complete, report:
+
+```
+📝 Article Complete
+File: [saved path]
+Title: [title]
+Length: ~[word count] words
+Review: [N issues fixed / clean]
+Humanize: [N patterns rewritten / already natural]
+
+Next: Use baoyu-article-illustrator for images, or baoyu-post-to-wechat to publish.
+```
 
 ## Extension Support
 

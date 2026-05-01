@@ -171,12 +171,15 @@ Save to `prompts/cover.md`. Template: [references/workflow/prompt-template.md](r
 ### Step 4: Generate Image
 
 1. **Backup existing** `cover.png` if regenerating
-2. **Check image generation skills**; if multiple, ask preference
-3. **Process references** from prompt frontmatter:
+2. **Use direct image output first**: if the current Agent/host can generate images directly, generate the cover from the saved prompt without calling another image-generation skill
+3. **Do not fall back just for paths**: an output path in the workflow is not enough reason to call a CLI/API backend; use the directly generated cover as the primary asset
+4. **Fallback backend**: if direct output is unavailable, or the user explicitly requests an API provider / local-file automation workflow, use `baoyu-image-gen`
+5. **Do not use Gemini Web by default**: do not call `baoyu-danger-gemini-web` unless the user explicitly requests Gemini Web reverse-engineered generation
+6. **Process references** from prompt frontmatter:
    - `direct` usage → pass via `--ref` (use ref-capable backend)
    - `style`/`palette` → extract traits, append to prompt
-4. **Generate**: Call skill with prompt file, output path, aspect ratio
-5. On failure: auto-retry once
+7. **Generate**: use the saved prompt file, visual brief, and aspect ratio
+8. On failure: auto-retry once
 
 ### Step 5: Completion Report
 

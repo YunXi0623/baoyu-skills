@@ -8,7 +8,8 @@ section,
 container {
   font-family: var(--md-font-family);
   font-size: var(--md-font-size);
-  line-height: 1.75;
+  line-height: var(--md-line-height);
+  letter-spacing: var(--md-letter-spacing);
   text-align: left;
 }
 
@@ -16,7 +17,8 @@ container {
 #output {
   font-family: var(--md-font-family);
   font-size: var(--md-font-size);
-  line-height: 1.75;
+  line-height: var(--md-line-height);
+  letter-spacing: var(--md-letter-spacing);
   text-align: left;
 }
 

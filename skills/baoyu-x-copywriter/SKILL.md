@@ -212,6 +212,32 @@ If the user gives enough context, skip asking and go straight to writing.
 - Label them simply: **版本一 / 版本二 / 版本三**
 - Do NOT explain or justify each version — just write them
 
+### Step 3.5: Review & Humanize（审核+润色）
+
+**Mandatory post-processing** — always run on all variations before showing to user.
+
+**3.5.1 Compliance Check**
+
+Load rules from `baoyu-content-review` skill:
+- [common-rules.md](../baoyu-content-review/references/common-rules.md) — advertising law, exaggeration
+- [x-twitter.md](../baoyu-content-review/references/platforms/x-twitter.md) — X/Twitter spam triggers
+
+Scan each variation. If violations found, auto-fix in-place before output. No separate report needed for short-form content — just fix silently.
+
+**3.5.2 AI Flavor Check**
+
+Load rules from `baoyu-humanize` skill:
+- [ai-patterns.md](../baoyu-humanize/references/ai-patterns.md) — AI writing patterns
+- [platform-tone.md](../baoyu-humanize/references/platform-tone.md) — X tone section
+
+Check each variation against AI patterns. Apply fixes:
+- Remove filler connectors
+- Fix template phrases
+- Ensure tone matches X's casual, direct style
+- Verify the smell test: "Could a real person have sent this as a casual message?"
+
+Output the cleaned variations directly — user sees only the final versions.
+
 ### Step 4: Refine
 
 If user wants changes:
@@ -220,6 +246,35 @@ If user wants changes:
 - "加个结尾问题" → add one genuine question, not rhetorical bait
 - "去掉hashtag" → remove
 - Regenerate only what changed, not the whole thing
+
+### Step 5: Attach Image (Optional)
+
+After user selects a version, ask if they want to attach an image:
+
+```
+header: "Image"
+question: "Want to attach an image to this post?"
+options:
+  - label: "No image"
+    description: "Post text only"
+  - label: "Generate image"
+    description: "Generate an image matching the post content"
+  - label: "Screenshot / existing file"
+    description: "Use a file you already have"
+```
+
+**If "Generate image"**:
+1. Derive a brief image prompt from the post content
+2. Call `baoyu-image-gen` skill (or `baoyu-cover-image` for polished visuals):
+   - Aspect ratio: 16:9 (landscape) for single image, 1:1 for quote cards
+   - Style: minimal or flat-vector (clean, professional)
+3. Save image alongside the post or in current directory
+4. Report image path to user
+
+**If "Screenshot / existing file"**:
+- User provides file path → attach when publishing via `baoyu-post-to-x`
+
+Skip this step entirely if user already specified "no image" or context makes it clear (e.g., quick thought, reply).
 
 ---
 

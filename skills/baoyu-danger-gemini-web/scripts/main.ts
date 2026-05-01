@@ -2,6 +2,52 @@ import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { mkdir, readFile, readdir, stat, writeFile } from 'node:fs/promises';
+import os from 'node:os';
+
+function findEnvFile(): string | null {
+  const candidates = [
+    path.join(process.cwd(), '.baoyu-skills', '.env'),
+    path.join(os.homedir(), '.baoyu-skills', '.env'),
+  ];
+  for (const p of candidates) {
+    if (fs.existsSync(p)) return p;
+  }
+  return null;
+}
+
+function parseEnvFile(p: string): Record<string, string> {
+  const env: Record<string, string> = {};
+  const content = fs.readFileSync(p, 'utf8');
+  for (const line of content.split('\n')) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) continue;
+    const eqIdx = trimmed.indexOf('=');
+    if (eqIdx < 1) continue;
+    env[trimmed.slice(0, eqIdx).trim()] = trimmed.slice(eqIdx + 1).trim();
+  }
+  return env;
+}
+
+if (!process.env.__BAOYU_ENV_LOADED) {
+  const envFile = findEnvFile();
+  if (envFile) {
+    const vars = parseEnvFile(envFile);
+    const needReExec = ['HTTPS_PROXY', 'HTTP_PROXY'].some((k) => vars[k] && !process.env[k]);
+    if (needReExec) {
+      if (!vars['NO_PROXY'] && !process.env.NO_PROXY) vars['NO_PROXY'] = 'localhost,127.0.0.1';
+      const merged = { ...process.env, ...Object.fromEntries(Object.entries(vars).filter(([k]) => !process.env[k])), __BAOYU_ENV_LOADED: '1' };
+      const child = Bun.spawn([process.execPath, ...process.argv.slice(1)], { env: merged, stdout: 'inherit', stderr: 'inherit', stdin: 'inherit' });
+      const code = await child.exited;
+      process.exit(code);
+    }
+    for (const [k, v] of Object.entries(vars)) {
+      if (!process.env[k]) process.env[k] = v;
+    }
+    if (!process.env.NO_PROXY && (process.env.HTTP_PROXY || process.env.HTTPS_PROXY)) {
+      process.env.NO_PROXY = 'localhost,127.0.0.1';
+    }
+  }
+}
 
 import { GeminiClient, GeneratedImage, Model, type ModelOutput } from './gemini-webapi/index.js';
 import { resolveGeminiWebChromeProfileDir, resolveGeminiWebCookiePath, resolveGeminiWebSessionPath, resolveGeminiWebSessionsDir } from './gemini-webapi/utils/index.js';

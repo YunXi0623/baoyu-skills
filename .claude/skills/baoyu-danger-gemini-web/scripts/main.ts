@@ -372,6 +372,47 @@ function formatJson(out: ModelOutput, extra?: Record<string, unknown>): string {
 }
 
 async function main(): Promise<void> {
+  if (!process.env.__BAOYU_ENV_LOADED) {
+    const envPaths = [
+      path.join(process.cwd(), '.baoyu-skills', '.env'),
+      path.join(process.env.HOME || process.env.USERPROFILE || '', '.baoyu-skills', '.env'),
+    ];
+
+    let envFile: string | null = null;
+    for (const p of envPaths) {
+      if (fs.existsSync(p)) {
+        envFile = p;
+        break;
+      }
+    }
+
+    if (envFile) {
+      const content = fs.readFileSync(envFile, 'utf-8');
+      const vars: Record<string, string> = {};
+      for (const line of content.split('\n')) {
+        const trimmed = line.trim();
+        if (!trimmed || trimmed.startsWith('#')) continue;
+        const match = trimmed.match(/^([A-Z_][A-Z0-9_]*)=(.*)$/);
+        if (match) {
+          vars[match[1]] = match[2].replace(/^["']|["']$/g, '');
+        }
+      }
+
+      const needReExec = ['HTTPS_PROXY', 'HTTP_PROXY'].some((k) => vars[k] && !process.env[k]);
+      if (needReExec) {
+        const merged = { ...process.env, ...vars, __BAOYU_ENV_LOADED: '1' };
+        const proc = Bun.spawn([process.execPath, ...process.argv.slice(1)], {
+          env: merged,
+          stdout: 'inherit',
+          stderr: 'inherit',
+          stdin: 'inherit',
+        });
+        const code = await proc.exited;
+        process.exit(code);
+      }
+    }
+  }
+
   const args = parseArgs(process.argv.slice(2));
 
   if (args.cookiePath) process.env.GEMINI_WEB_COOKIE_PATH = args.cookiePath;
